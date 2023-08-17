@@ -9,7 +9,7 @@ const resolvers = {
                 const userData = await User
                     .findOne({ _id: context.user._id })
                     .select("-__v -password")
-                    .populate("books");
+                    
                 
                 return userData;
             };
@@ -47,8 +47,8 @@ const resolvers = {
                         { _id: context.user._id }, 
                         { $addToSet: { savedBooks: bookData } },
                         { new: true },
-                    )
-                    .populate("books");
+                    );
+                    
                 return updatedUser;
             };
             throw new AuthenticationError("You must be logged in to save books!");
