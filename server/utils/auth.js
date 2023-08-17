@@ -9,10 +9,10 @@ module.exports = {
   authMiddleware: function ({ req }) {
     req.user = null;
     // allows token to be sent via  req.query or headers
-    let token = req.query.token || req.headers.authorization;
+    let token = req.body.token || req.query.token || req.headers.authorization;
 
   
-    if (token) {
+    if (req.headers.authorization) {
       token = token.split(' ').pop().trim();
     }
 
@@ -26,7 +26,6 @@ module.exports = {
       req.user = data;
     } catch {
       console.log('Invalid token');
-      throw new Error('Invalid token');
     }
 
    return req;

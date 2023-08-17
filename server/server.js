@@ -19,12 +19,15 @@ if (process.env.NODE_ENV === 'production') {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req }) => {
-    const newReq = authMiddleware({ req });
-  },
+  context: authMiddleware,
+  persistedQueries: false,
 });
 
-server.applyMiddleware({ app });
+const startApolloServer = async (typeDefs, resolvers) => {
+  await server.start();
+  server.applyMiddleware({ app });
+
+
 
 db.once('open', () => {
   app.listen(PORT, () => { 
@@ -32,3 +35,4 @@ db.once('open', () => {
     console.log(`🚀 GraphQL ready at http://localhost:${PORT}${server.graphqlPath}`);
    });
 });
+};
