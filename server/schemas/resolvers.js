@@ -4,66 +4,67 @@ const { signToken } = require("../utils/auth");
 
 const resolvers = {
     Query: {
-        users: async () => {
-            return User.find();
+        me: async (parent, args, context) => {
+            if (context.user) {
+                const userData = await User
+                    .findOne({ _id: context.user._id })
+                    .select("-__v -password")
+                    .populate("books");
+                
+                return userData;
+            };
+            throw new AuthenticationError("You must be logged in!");
         },
-        user: async (parent, { userId }) => {
-            return User.findOne({ _id: userId });
-        },
-    },
+    }, 
+
     Mutation: {
-        addUser: async (parent, { username, email, password }) => {
-            const user = await User.create({ username, email, password });
-            const token = signToken(user);
-            return { token, user };
-        },
         login: async (parent, { email, password }) => {
             const user = await User.findOne({ email });
             if (!user) {
-                throw new AuthenticationError("No user with this email found!");
-            }
-            const correctPw = await user.isCorrectPassword(password);
-            if (!correctPw) {
-                throw new AuthenticationError("Incorrect password!");
-            }
+                throw new AuthenticationError("Incorrect login credentials!");
+            };
+
+            const correctPW = await user.isCorrectPassword(password);
+            if (!correctPW) {
+                throw new AuthenticationError("Incorrect login credentials!");
+            };
+
             const token = signToken(user);
             return { token, user };
         },
-        addBook: async (
-            parent,
-            { userId, authors, description, bookId, image, link, title }
-        ) => {
-            const book = {
-                authors,
-                description,
-                bookId,
-                image,
-                link,
-                title,
-            };
-            console.log(book);
+        
+        addUser: async (parent, args) => {
+            const user = await User.create(args);
+            const token = signToken(user);
 
-            return User.findOneAndUpdate(
-                { _id: userId },
-                {
-                    $addToSet: { savedBooks: book },
-                },
-                {
-                    new: true,
-                    runValidators: true,
-                }
-            );
+            return { token, user };
         },
-        removeUser: async (parent, { userId }) => {
-            return User.findOneAndDelete({ _id: userId });
+
+        saveBook: async (parent, { bookData }, context) => {
+            if (context.user) {
+                const updatedUser = await User
+                    .findOneAndUpdate(
+                        { _id: context.user._id }, 
+                        { $addToSet: { savedBooks: bookData } },
+                        { new: true },
+                    )
+                    .populate("books");
+                return updatedUser;
+            };
+            throw new AuthenticationError("You must be logged in to save books!");
         },
-        removeBook: async (parent, { userId, bookId }) => {
-            return User.findOneAndUpdate(
-                { _id: userId },
-                { $pull: { savedBooks: { bookId: bookId } } },
-                { new: true }
-            );
-        },
+
+        removeBook: async (parent, { bookId }, context) => {
+            if (context.user) {
+                const updatedUser = await User.findOneAndUpdate(
+                    { _id: context.user._id },
+                    { $pull: { savedBooks: { bookId } } },
+                    { new: true },
+                );
+                return updatedUser;
+            };
+            throw new AuthenticationError("You must be logged in to delete books!");
+        }
     },
 };
 
