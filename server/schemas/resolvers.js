@@ -55,15 +55,26 @@ const resolvers = {
         },
 
         removeBook: async (parent, { bookId }, context) => {
-            if (context.user) {
+            if (!context.user) {
+                throw new AuthenticationError("You must be logged in to delete books!");
+            }
+        
+            try {
                 const updatedUser = await User.findOneAndUpdate(
                     { _id: context.user._id },
                     { $pull: { savedBooks: { bookId } } },
-                    { new: true },
+                    { new: true }
                 );
+        
+                if (!updatedUser) {
+                    throw new Error("User not found or book not removed.");
+                }
+        
                 return updatedUser;
-            };
-            throw new AuthenticationError("You must be logged in to delete books!");
+            } catch (error) {
+                console.error("Error removing book: ", error);
+                throw new Error("Error removing the book.");
+            }
         }
     },
 };
