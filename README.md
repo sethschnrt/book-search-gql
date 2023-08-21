@@ -38,3 +38,5 @@ To contribute, fork the repository. Next, create a new branch for the feature yo
 If you have any questions about the repo, open an issue or contact me directly at seth.schoenert@gmail.com . You can find more of my work at [SethSchnrt](https://github.com/SethSchnrt/).
 
 ## Screenshot 
+![image](https://github.com/sethschnrt/book-search-gql/assets/127680441/58b8d965-e089-469c-9a86-72481416e9d2)
+
